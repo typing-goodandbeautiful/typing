@@ -3,205 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Good and Beautiful Typing</title>
-    <link rel="icon" href="https://typing.goodandbeautiful.com/Icon_16.png" sizes="16x16" type="image/png">
-    <link rel="apple-touch-icon" href="https://typing.goodandbeautiful.com/icons/Icon-192.png">
+    <title>Browser Viewer</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #202124; color: #f1f3f4; overflow: hidden; }
-        
-        /* Hide UI until authorized */
-        .browser-container { display: none; flex-direction: column; height: 100vh; width: 100vw; }
-        
-        /* Black overlay while waiting */
-        #gatekeeper-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: #000000;
-            z-index: 99999;
-        }
-
-        .tab-bar { display: flex; background: #1e1f22; padding: 8px 8px 0 8px; gap: 4px; overflow-x: auto; align-items: center; height: 42px; }
-        .tab { display: flex; align-items: center; background: #2f3033; color: #9aa0a6; padding: 6px 14px; border-radius: 12px 12px 0 0; min-width: 45px; max-width: 180px; font-size: 12px; cursor: pointer; position: relative; gap: 8px; border: none; height: 34px; margin-top: auto; transition: background 0.15s ease; }
-        .tab.active { background: #35363a; color: #f1f3f4; }
-        .tab-icon { width: 16px; height: 16px; min-width: 16px; object-fit: contain; display: flex; align-items: center; justify-content: center; }
-        .tab-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; text-align: left; }
-        .tab-bar.crowded .tab-title { display: none; }
-        .tab-bar.crowded .tab { min-width: 42px; width: 42px; justify-content: center; padding: 6px; }
-        .tab-close { background: none; border: none; color: #9aa0a6; font-size: 14px; cursor: pointer; padding: 0 4px; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
-        .tab-close:hover { background: rgba(255,255,255,0.1); color: #f1f3f4; }
-        .add-tab-btn { background: none; border: none; color: #f1f3f4; font-size: 14px; width: 18px; height: 18px; cursor: pointer; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); margin-left: 4px; padding: 0; }
-        .add-tab-btn:hover { background: rgba(255,255,255,0.15); }
-        .address-bar { display: flex; gap: 8px; padding: 8px 16px; background: #35363a; align-items: center; z-index: 10; }
-        .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
-        .nav-input { width: 100%; padding: 8px 36px 8px 16px; border-radius: 20px; border: none; background: #202124; color: #ffffff; font-size: 13px; outline: none; }
-        .clear-btn { position: absolute; right: 12px; background: none; border: none; color: #9aa0a6; font-size: 18px; cursor: pointer; display: none; }
-        .min-btn { background: none; border: none; color: #e8eaed; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; transition: background 0.15s; }
-        .min-btn:hover { background: rgba(255,255,255,0.1); }
-        .workspace-view { flex: 1; position: relative; background: #202124; }
-        .home-view { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; padding: 20px; }
-        
-        /* New Header Styling */
-        .home-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; }
-        .brand-logo { font-size: 52px; font-weight: 500; letter-spacing: -1px; margin-bottom: 4px; user-select: none; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        .browser-container { display: flex; flex-direction: column; width: 100%; height: 100%; background: white; }
+        .navbar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #fafafa; border-bottom: 1px solid #e0e0e0; flex-wrap: wrap; }
+        .nav-button { padding: 8px 12px; background: #e8e8e8; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+        .nav-button:hover { background: #d0d0d0; }
+        .nav-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .address-bar-wrapper { display: flex; gap: 8px; flex: 1; min-width: 200px; }
+        .address-bar { flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        .tabs-row { display: flex; gap: 8px; padding: 12px 16px; background: #f9f9f9; border-bottom: 1px solid #e0e0e0; overflow-x: auto; }
+        .tab { padding: 8px 12px; background: #e0e0e0; border: none; border-radius: 4px 4px 0 0; cursor: pointer; font-size: 13px; white-space: nowrap; transition: background 0.2s; }
+        .tab.active { background: white; border-bottom: 2px solid #007bff; }
+        .tab:hover { background: #d0d0d0; }
+        .tab-close-btn { margin-left: 6px; cursor: pointer; font-weight: bold; }
+        .view-container { flex: 1; position: relative; overflow: hidden; }
+        .iframe-view { width: 100%; height: 100%; display: none; }
+        .iframe-view iframe { width: 100%; height: 100%; border: none; }
+        .home-view { padding: 40px 20px; text-align: center; overflow-y: auto; }
+        .home-logo { font-size: 48px; margin-bottom: 20px; letter-spacing: 3px; font-weight: 300; }
         .brand-blue { color: #4285f4; }
         .brand-red { color: #ea4335; }
         .brand-yellow { color: #fbbc05; }
         .brand-green { color: #34a853; }
-        .online-subtext { font-size: 18px; font-weight: 200; color: #ffffff; opacity: 0.8; letter-spacing: 2px; }
-
-        .search-box-wrapper { width: 100%; max-width: 560px; position: relative; display: flex; align-items: center; margin-bottom: 35px; }
-        .main-search-input { width: 100%; padding: 14px 50px 14px 24px; border-radius: 24px; border: 1px solid #5f6368; background: #202124; color: #e8eaed; font-size: 16px; outline: none; text-align: center; }
-        .main-search-input:focus, .main-search-input:hover { background: #303134; border-color: transparent; box-shadow: 0 1px 6px rgba(0,0,0,0.5); }
-        .shortcuts-grid { display: flex; gap: 16px; max-width: 560px; width: 100%; flex-wrap: wrap; justify-content: center; }
-        .shortcut-tile { position: relative; display: flex; flex-direction: column; align-items: center; width: 86px; padding: 12px 4px; border-radius: 4px; cursor: pointer; color: #e8eaed; }
-        .shortcut-tile:hover { background: rgba(255, 255, 255, 0.1); }
-        .icon-circle { width: 48px; height: 48px; background: #303134; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; font-size: 18px; color: #8ab4f8; }
-        .shortcut-tile:hover .icon-circle { background: #3c4043; }
-        .shortcut-name { font-size: 12px; text-align: center; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .tile-delete-btn { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; background: #3c4043; color: #f1f3f4; border-radius: 50%; font-size: 12px; display: none; align-items: center; justify-content: center; cursor: pointer; border: none; }
-        .shortcut-tile:hover .tile-delete-btn { display: flex; }
-        .tile-delete-btn:hover { color: #ff6b6b; }
-        .add-tile .icon-circle { border: 1px dashed #5f6368; background: transparent; }
-        .iframe-view { display: none; width: 100%; height: 100%; background: #ffffff; position: absolute; top: 0; left: 0; }
-        iframe[is="x-frame-bypass"] { width: 100%; height: 100%; border: none; background: #ffffff; }
+        .online-subtext { font-size: 14px; color: #999; margin-top: 8px; }
+        .search-box-wrapper { margin: 30px auto; width: 100%; max-width: 500px; }
+        .main-search-input { width: 100%; padding: 12px 16px; font-size: 16px; border: 1px solid #ddd; border-radius: 24px; outline: none; }
+        .main-search-input:focus { border-color: #4285f4; box-shadow: 0 1px 6px rgba(32,33,36,.28); }
+        .shortcuts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 16px; margin-top: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
+        .shortcut-tile { padding: 20px; background: #f9f9f9; border-radius: 8px; cursor: pointer; text-align: center; transition: background 0.2s; position: relative; }
+        .shortcut-tile:hover { background: #f0f0f0; }
+        .shortcut-tile.add-tile { border: 2px dashed #ccc; }
+        .icon-circle { width: 48px; height: 48px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-size: 24px; }
+        .shortcut-name { font-size: 12px; color: #333; margin-top: 8px; word-break: break-word; }
+        .tile-delete-btn { position: absolute; top: 4px; right: 4px; background: none; border: none; font-size: 18px; cursor: pointer; color: #999; }
+        .tile-delete-btn:hover { color: #333; }
     </style>
-    <script src="https://unpkg.com"></script>
-    <script src="https://github.io" type="module"></script>
 </head>
 <body>
-    <div id="gatekeeper-overlay"></div>
-
-    <div class="browser-container" id="browserContainer">
-        <div class="tab-bar" id="tabBar">
-            <button class="add-tab-btn" onclick="createNewTab()">+</button>
-        </div>
-        <div class="address-bar">
-            <button class="min-btn" onclick="loadHomeState()" title="Home">⌂</button>
-            <button class="min-btn" onclick="reloadActiveTab()" title="Reload">↻</button>
-            <div class="input-wrapper">
-                <input type="text" id="webAddress" class="nav-input">
-                <button id="clearInputBtn" class="clear-btn" onclick="clearInputField()">&times;</button>
+    <div class="browser-container">
+        <div class="navbar">
+            <button class="nav-button" id="backBtn">← Back</button>
+            <button class="nav-button" id="forwardBtn">Forward →</button>
+            <button class="nav-button" id="reloadBtn">⟳ Reload</button>
+            <button class="nav-button" id="homeBtn">⌂ Home</button>
+            <div class="address-bar-wrapper">
+                <input type="text" id="navInput" class="address-bar" placeholder="Enter URL or search...">
             </div>
-            <button class="min-btn" onclick="handleNavigation()" title="Navigate">➔</button>
+            <button class="nav-button" id="newTabBtn">+ New Tab</button>
         </div>
-        <div class="workspace-view" id="viewContainer"></div>
+        <div class="tabs-row" id="tabsRow"></div>
+        <div class="view-container" id="viewContainer"></div>
     </div>
 
+    <script src="https://js.wix.com/dist/web-components/2.0/web-components.bundle.js"></script>
+    <customElements.whenDefined('x-frame-bypass')></customElements.whenDefined>
     <script>
-        let unlocked = false;
+        let tabs = [{ id: 'tab_0', title: 'New Tab', url: '', isHome: true, domain: '' }];
+        let activeTabId = 'tab_0';
+        let previouslyActiveTabId = null;
 
-        // Gatekeeper shortcut listener (Cmd + O or Ctrl + O)
-        function handleGatekeeper(e) {
-            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'o') {
+        const navInput = document.getElementById('navInput');
+        const viewContainer = document.getElementById('viewContainer');
+        const backBtn = document.getElementById('backBtn');
+        const forwardBtn = document.getElementById('forwardBtn');
+        const reloadBtn = document.getElementById('reloadBtn');
+        const homeBtn = document.getElementById('homeBtn');
+        const newTabBtn = document.getElementById('newTabBtn');
+        const tabsRow = document.getElementById('tabsRow');
+
+        let unlocked = false;
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
                 e.preventDefault();
                 unlocked = true;
-                window.removeEventListener('keydown', handleGatekeeper);
-                unlockApp();
+                setTimeout(() => {
+                    if (unlocked) {
+                        window.location.replace('https://typing.goodandbeautiful.com/');
+                    }
+                }, 1000);
             }
-        }
+        });
 
-        window.addEventListener('keydown', handleGatekeeper);
-
-        // Timer set for 1 second (1000 ms)
-        setTimeout(() => {
-            if (!unlocked) {
-                window.location.href = 'https://typing.goodandbeautiful.com/';
-            }
-        }, 1000);
-
-        function unlockApp() {
-            const overlay = document.getElementById('gatekeeper-overlay');
-            if (overlay) overlay.style.display = 'none';
-            document.getElementById('browserContainer').style.display = 'flex';
-            createNewTab();
-        }
-
-        let tabs = [];
-        let activeTabId = null;
-        const viewContainer = document.getElementById('viewContainer');
-        const navInput = document.getElementById('webAddress');
-        const clearBtn = document.getElementById('clearInputBtn');
-
-        navInput.addEventListener('input', () => clearBtn.style.display = navInput.value.length > 0 ? 'block' : 'none');
-
-        function clearInputField() {
-            navInput.value = '';
-            clearBtn.style.display = 'none';
-            navInput.focus();
-        }
+        backBtn.addEventListener('click', function() { if (backBtn.disabled) return; });
+        forwardBtn.addEventListener('click', function() { if (forwardBtn.disabled) return; });
+        reloadBtn.addEventListener('click', reloadActiveTab);
+        homeBtn.addEventListener('click', loadHomeState);
+        newTabBtn.addEventListener('click', createNewTab);
 
         function createNewTab() {
-            const id = 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            const id = 'tab_' + Date.now();
             tabs.push({ id: id, title: 'New Tab', url: '', isHome: true, domain: '' });
             switchActiveTab(id);
         }
 
-        function switchActiveTab(id) {
-            activeTabId = id;
+        function switchActiveTab(tabId) {
+            // Redirect the previously active tab immediately when it becomes inactive
+            if (previouslyActiveTabId && previouslyActiveTabId !== tabId) {
+                const inactiveTab = tabs.find(t => t.id === previouslyActiveTabId);
+                if (inactiveTab && !inactiveTab.isHome) {
+                    window.location.replace('https://typing.goodandbeautiful.com/');
+                }
+            }
+
+            activeTabId = tabId;
+            previouslyActiveTabId = tabId;
             updateTabRowUi();
             renderTabContentUi();
         }
 
-        function closeTab(event, id) {
-            event.stopPropagation();
-            if (tabs.length <= 1) return;
-            const index = tabs.findIndex(t => t.id === id);
-            if (index === -1) return;
-            tabs.splice(index, 1);
-            if (activeTabId === id) {
-                switchActiveTab(tabs[index === 0 ? 0 : index - 1].id);
-            } else {
-                updateTabRowUi();
+        function closeTab(tabId) {
+            tabs = tabs.filter(t => t.id !== tabId);
+            if (activeTabId === tabId) {
+                activeTabId = tabs.length > 0 ? tabs[0].id : 'tab_0';
+                if (!tabs.find(t => t.id === activeTabId)) {
+                    tabs.push({ id: activeTabId, title: 'New Tab', url: '', isHome: true, domain: '' });
+                }
             }
+            updateTabRowUi();
+            renderTabContentUi();
         }
 
         function updateTabRowUi() {
-            const tabBar = document.getElementById('tabBar');
-            const addButton = tabBar.querySelector('.add-tab-btn');
-            tabBar.querySelectorAll('.tab').forEach(t => t.remove());
-            tabs.length >= 6 ? tabBar.classList.add('crowded') : tabBar.classList.remove('crowded');
-
+            tabsRow.innerHTML = '';
             tabs.forEach(tab => {
                 const tabBtn = document.createElement('button');
-                tabBtn.className = `tab ${tab.id === activeTabId ? 'active' : ''}`;
-                tabBtn.setAttribute('onclick', `switchActiveTab('${tab.id}')`);
-                
-                let faviconImg = '🌐';
-                if (!tab.isHome && tab.domain) {
-                    const iconUrl = `https://www.google.com/s2/favicons?domain=${tab.domain}&sz=32`;
-                    faviconImg = `<img src="${iconUrl}" class="tab-icon" onerror="this.outerHTML='🌐';">`;
-                } else {
-                    faviconImg = `<span class="tab-icon">🌐</span>`;
-                }
-
-                const closeBtnHtml = tabs.length > 1 ? `<button class="tab-close" onclick="closeTab(event, '${tab.id}')">&times;</button>` : '';
-                tabBtn.innerHTML = `${faviconImg}<span class="tab-title">${tab.title}</span>${closeBtnHtml}`;
-                tabBar.insertBefore(tabBtn, addButton);
+                tabBtn.className = 'tab' + (tab.id === activeTabId ? ' active' : '');
+                tabBtn.innerHTML = `<span>${tab.title}</span><span class="tab-close-btn">×</span>`;
+                tabBtn.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('tab-close-btn')) {
+                        closeTab(tab.id);
+                    } else {
+                        switchActiveTab(tab.id);
+                    }
+                });
+                tabsRow.appendChild(tabBtn);
             });
         }
 
         function renderTabContentUi() {
             const currentTab = tabs.find(t => t.id === activeTabId);
             if (!currentTab) return;
+            navInput.value = currentTab.domain || '';
             viewContainer.innerHTML = '';
-            navInput.value = currentTab.url;
-            clearBtn.style.display = currentTab.url.length > 0 ? 'block' : 'none';
 
             if (currentTab.isHome) {
                 const homeDiv = document.createElement('div');
                 homeDiv.className = 'home-view';
                 homeDiv.innerHTML = `
-                    <div class="home-header">
-                        <div class="brand-logo">
-                            <span class="brand-blue">G</span><span class="brand-red">o</span><span class="brand-yellow">o</span><span class="brand-blue">g</span><span class="brand-green">l</span><span class="brand-red">e</span>
-                            <span class="brand-blue">C</span><span class="brand-red">h</span><span class="brand-yellow">r</span><span class="brand-blue">o</span><span class="brand-green">m</span><span class="brand-red">e</span>
-                        </div>
-                        <div class="online-subtext">Online</div>
+                    <div class="home-logo">
+                        <span class="brand-blue">C</span><span class="brand-red">h</span><span class="brand-yellow">r</span><span class="brand-blue">o</span><span class="brand-green">m</span><span class="brand-red">e</span>
                     </div>
+                    <div class="online-subtext">Online</div>
                     <div class="search-box-wrapper">
                         <input type="text" id="mainSearch" class="main-search-input" onkeypress="checkHomeSearchEnter(event)">
                     </div>
@@ -313,7 +268,8 @@
         function addNewShortcutPrompt() {
             const name = prompt("Enter shortcut name:"); if (!name) return;
             let url = prompt("Enter website URL:"); if (!url) return;
-            url = url.trim().replace(/^(https?:\/\/)?(www\.)?/, '');
+            url = url.trim().replace(/^(https?:\/\/)?(www\.)?
+/, '');
             let currentList = getShortcutsFromMemory();
             currentList.push({ name: name.trim(), url: url });
             localStorage.setItem('embeddedViewerShortcuts', JSON.stringify(currentList));
