@@ -96,14 +96,6 @@
             window.location.replace(targetRedirectUrl);
         }
 
-        // Redirect if focus leaves the browser tab or window (switching tabs or apps)
-        window.addEventListener('blur', triggerRedirect);
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                triggerRedirect();
-            }
-        });
-
         function handleGatekeeper(e) {
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'o') {
                 e.preventDefault();
