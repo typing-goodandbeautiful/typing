@@ -1,475 +1,342 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Online Browser</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Good and Beautiful Typing</title>
+    <link rel="icon" href="https://typing.goodandbeautiful.com/Icon_16.png" sizes="16x16" type="image/png">
+    <link rel="apple-touch-icon" href="https://typing.goodandbeautiful.com/icons/Icon-192.png">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #202124; color: #f1f3f4; overflow: hidden; }
+        
+        .browser-container { display: none; flex-direction: column; height: 100vh; width: 100vw; }
+        
+        #gatekeeper-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #000000;
+            z-index: 99999;
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: #fff;
-      overflow: hidden;
-    }
+        .tab-bar { display: flex; background: #1e1f22; padding: 8px 8px 0 8px; gap: 4px; overflow-x: auto; align-items: center; height: 42px; }
+        .tab { display: flex; align-items: center; background: #2f3033; color: #9aa0a6; padding: 6px 14px; border-radius: 12px 12px 0 0; min-width: 45px; max-width: 180px; font-size: 12px; cursor: pointer; position: relative; gap: 8px; border: none; height: 34px; margin-top: auto; transition: background 0.15s ease; }
+        .tab.active { background: #35363a; color: #f1f3f4; }
+        .tab-icon { width: 16px; height: 16px; min-width: 16px; object-fit: contain; display: flex; align-items: center; justify-content: center; }
+        .tab-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; text-align: left; }
+        .tab-bar.crowded .tab-title { display: none; }
+        .tab-bar.crowded .tab { min-width: 42px; width: 42px; justify-content: center; padding: 6px; }
+        .tab-close { background: none; border: none; color: #9aa0a6; font-size: 14px; cursor: pointer; padding: 0 4px; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+        .tab-close:hover { background: rgba(255,255,255,0.1); color: #f1f3f4; }
+        .add-tab-btn { background: none; border: none; color: #f1f3f4; font-size: 14px; width: 18px; height: 18px; cursor: pointer; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); margin-left: 4px; padding: 0; }
+        .add-tab-btn:hover { background: rgba(255,255,255,0.15); }
+        .address-bar { display: flex; gap: 8px; padding: 8px 16px; background: #35363a; align-items: center; z-index: 10; }
+        .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
+        .nav-input { width: 100%; padding: 8px 36px 8px 16px; border-radius: 20px; border: none; background: #202124; color: #ffffff; font-size: 13px; outline: none; }
+        .clear-btn { position: absolute; right: 12px; background: none; border: none; color: #9aa0a6; font-size: 18px; cursor: pointer; display: none; }
+        .min-btn { background: none; border: none; color: #e8eaed; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; transition: background 0.15s; }
+        .min-btn:hover { background: rgba(255,255,255,0.1); }
+        .workspace-view { flex: 1; position: relative; background: #202124; }
+        .home-view { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; padding: 20px; }
+        
+        .home-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; }
+        .brand-logo { font-size: 52px; font-weight: 500; letter-spacing: -1px; margin-bottom: 4px; user-select: none; }
+        .brand-blue { color: #4285f4; }
+        .brand-red { color: #ea4335; }
+        .brand-yellow { color: #fbbc05; }
+        .brand-green { color: #34a853; }
+        .online-subtext { font-size: 18px; font-weight: 200; color: #ffffff; opacity: 0.8; letter-spacing: 2px; }
 
-    /* Gatekeeper Overlay */
-    #gatekeeper-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      color: #fff;
-    }
-
-    /* Browser Container */
-    #browser-container {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      background: #f5f5f5;
-    }
-
-    /* Tab Row */
-    #tab-row {
-      display: flex;
-      gap: 4px;
-      background: #e0e0e0;
-      padding: 8px;
-      border-bottom: 1px solid #ccc;
-      overflow-x: auto;
-      flex-wrap: wrap;
-    }
-
-    .tab-button {
-      padding: 8px 12px;
-      background: #d0d0d0;
-      border: 1px solid #999;
-      border-radius: 4px 4px 0 0;
-      cursor: pointer;
-      font-size: 13px;
-      white-space: nowrap;
-      transition: background 0.2s;
-    }
-
-    .tab-button:hover {
-      background: #e0e0e0;
-    }
-
-    .tab-button.active {
-      background: #fff;
-      border-bottom-color: #fff;
-    }
-
-    .tab-button.close-btn {
-      padding: 4px 8px;
-      margin-left: 4px;
-      background: #ff6b6b;
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      border-radius: 2px;
-    }
-
-    .tab-button.close-btn:hover {
-      background: #ff5252;
-    }
-
-    /* Address Bar */
-    #address-bar-container {
-      display: flex;
-      gap: 8px;
-      padding: 8px;
-      background: #e8e8e8;
-      border-bottom: 1px solid #ccc;
-      align-items: center;
-    }
-
-    #address-input {
-      flex: 1;
-      padding: 8px 12px;
-      border: 1px solid #999;
-      border-radius: 4px;
-      font-size: 13px;
-      font-family: monospace;
-    }
-
-    #go-button, #reload-button, #new-tab-button {
-      padding: 8px 16px;
-      background: #007bff;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 13px;
-      transition: background 0.2s;
-    }
-
-    #go-button:hover, #reload-button:hover, #new-tab-button:hover {
-      background: #0056b3;
-    }
-
-    /* Tab Content Area */
-    #tab-content {
-      flex: 1;
-      overflow: hidden;
-      background: #fff;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .tab-pane {
-      display: none;
-      width: 100%;
-      height: 100%;
-      flex-direction: column;
-    }
-
-    .tab-pane.active {
-      display: flex;
-    }
-
-    /* Home UI */
-    .home-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      gap: 40px;
-      padding: 20px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: #fff;
-    }
-
-    .search-box {
-      width: 100%;
-      max-width: 600px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .search-input {
-      padding: 12px 16px;
-      border: none;
-      border-radius: 24px;
-      font-size: 16px;
-      width: 100%;
-    }
-
-    .shortcuts {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .shortcut-btn {
-      padding: 12px 20px;
-      background: rgba(255, 255, 255, 0.2);
-      color: #fff;
-      border: 2px solid #fff;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: all 0.3s;
-    }
-
-    .shortcut-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: scale(1.05);
-    }
-
-    /* Iframe Container */
-    .iframe-container {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: #fff;
-    }
-
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-
-    /* x-frame-bypass */
-    x-frame-bypass {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-
-    x-frame-bypass > * {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
+        .search-box-wrapper { width: 100%; max-width: 560px; position: relative; display: flex; align-items: center; margin-bottom: 35px; }
+        .main-search-input { width: 100%; padding: 14px 50px 14px 24px; border-radius: 24px; border: 1px solid #5f6368; background: #202124; color: #e8eaed; font-size: 16px; outline: none; text-align: center; }
+        .main-search-input:focus, .main-search-input:hover { background: #303134; border-color: transparent; box-shadow: 0 1px 6px rgba(0,0,0,0.5); }
+        .shortcuts-grid { display: flex; gap: 16px; max-width: 560px; width: 100%; flex-wrap: wrap; justify-content: center; }
+        .shortcut-tile { position: relative; display: flex; flex-direction: column; align-items: center; width: 86px; padding: 12px 4px; border-radius: 4px; cursor: pointer; color: #e8eaed; }
+        .shortcut-tile:hover { background: rgba(255, 255, 255, 0.1); }
+        .icon-circle { width: 48px; height: 48px; background: #303134; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; font-size: 18px; color: #8ab4f8; }
+        .shortcut-tile:hover .icon-circle { background: #3c4043; }
+        .shortcut-name { font-size: 12px; text-align: center; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tile-delete-btn { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; background: #3c4043; color: #f1f3f4; border-radius: 50%; font-size: 12px; display: none; align-items: center; justify-content: center; cursor: pointer; border: none; }
+        .shortcut-tile:hover .tile-delete-btn { display: flex; }
+        .tile-delete-btn:hover { color: #ff6b6b; }
+        .add-tile .icon-circle { border: 1px dashed #5f6368; background: transparent; }
+        .iframe-view { display: none; width: 100%; height: 100%; background: #ffffff; position: absolute; top: 0; left: 0; }
+        iframe[is="x-frame-bypass"] { width: 100%; height: 100%; border: none; background: #ffffff; }
+    </style>
+    <script src="https://unpkg.com"></script>
+    <script src="https://github.io" type="module"></script>
 </head>
 <body>
+    <div id="gatekeeper-overlay"></div>
 
-<!-- Gatekeeper Overlay -->
-<div id="gatekeeper-overlay">
-  Press <strong>Cmd+O</strong> (Mac) or <strong>Ctrl+O</strong> (Windows/Linux) to unlock
-</div>
-
-<!-- Browser Container -->
-<div id="browser-container" style="display: none;">
-  
-  <!-- Tab Row -->
-  <div id="tab-row"></div>
-
-  <!-- Address Bar -->
-  <div id="address-bar-container">
-    <input type="text" id="address-input" placeholder="Enter URL...">
-    <button id="go-button">Go</button>
-    <button id="reload-button">Reload</button>
-    <button id="new-tab-button">+ New Tab</button>
-  </div>
-
-  <!-- Tab Content -->
-  <div id="tab-content"></div>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/x-frame-bypass@1.0.6/build/xFrameBypass.js"></script>
-
-<script>
-  let tabs = [];
-  let activeTabId = null;
-  let unlocked = false;
-  let pageHasFocus = true;
-
-  // Tab class
-  class Tab {
-    constructor(id, title = 'New Tab', url = '', isHome = true) {
-      this.id = id;
-      this.title = title;
-      this.url = url;
-      this.isHome = isHome;
-      this.historyStack = [];
-    }
-  }
-
-  // Initialize with Home tab
-  function initializeBrowser() {
-    const homeTab = new Tab(1, 'Home', '', true);
-    tabs.push(homeTab);
-    activeTabId = homeTab.id;
-    renderTabRowUi();
-    renderTabContentUi();
-  }
-
-  // Create new tab
-  function createNewTab() {
-    const newId = Math.max(...tabs.map(t => t.id), 0) + 1;
-    const newTab = new Tab(newId, 'New Tab', '', true);
-    tabs.push(newTab);
-    activeTabId = newId;
-    renderTabRowUi();
-    renderTabContentUi();
-  }
-
-  // Switch active tab
-  function switchActiveTab(id) {
-    activeTabId = id;
-    updateTabRowUi();
-    renderTabContentUi();
-  }
-
-  // Close tab
-  function closeTab(id) {
-    tabs = tabs.filter(t => t.id !== id);
-    if (activeTabId === id) {
-      activeTabId = tabs.length > 0 ? tabs[0].id : null;
-    }
-    renderTabRowUi();
-    renderTabContentUi();
-  }
-
-  // Navigate in current tab
-  function navigateTab(url) {
-    const tab = tabs.find(t => t.id === activeTabId);
-    if (!tab) return;
-
-    // Validate URL
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = 'https://' + url;
-    }
-
-    tab.url = url;
-    tab.isHome = false;
-    tab.title = url;
-    tab.historyStack.push(url);
-
-    renderTabRowUi();
-    renderTabContentUi();
-  }
-
-  // Reload current tab
-  function reloadTab() {
-    const tab = tabs.find(t => t.id === activeTabId);
-    if (tab && !tab.isHome) {
-      renderTabContentUi();
-    }
-  }
-
-  // Render tab row UI
-  function renderTabRowUi() {
-    const tabRow = document.getElementById('tab-row');
-    tabRow.innerHTML = '';
-
-    tabs.forEach(tab => {
-      const tabDiv = document.createElement('div');
-      tabDiv.style.display = 'flex';
-      tabDiv.style.alignItems = 'center';
-
-      const tabBtn = document.createElement('button');
-      tabBtn.className = 'tab-button' + (tab.id === activeTabId ? ' active' : '');
-      tabBtn.textContent = tab.title;
-      tabBtn.onclick = () => switchActiveTab(tab.id);
-
-      const closeBtn = document.createElement('button');
-      closeBtn.className = 'tab-button close-btn';
-      closeBtn.textContent = '✕';
-      closeBtn.onclick = (e) => {
-        e.stopPropagation();
-        closeTab(tab.id);
-      };
-
-      tabDiv.appendChild(tabBtn);
-      tabDiv.appendChild(closeBtn);
-      tabRow.appendChild(tabDiv);
-    });
-  }
-
-  function updateTabRowUi() {
-    document.querySelectorAll('.tab-button:not(.close-btn)').forEach(btn => {
-      btn.classList.remove('active');
-    });
-    const activeBtn = document.querySelector(`.tab-button:not(.close-btn)[data-tab-id="${activeTabId}"]`);
-    if (activeBtn) {
-      activeBtn.classList.add('active');
-    }
-  }
-
-  // Render tab content UI
-  function renderTabContentUi() {
-    const tabContent = document.getElementById('tab-content');
-    tabContent.innerHTML = '';
-
-    const tab = tabs.find(t => t.id === activeTabId);
-    if (!tab) return;
-
-    const pane = document.createElement('div');
-    pane.className = 'tab-pane active';
-
-    if (tab.isHome) {
-      // Home UI
-      pane.innerHTML = `
-        <div class="home-container">
-          <div class="search-box">
-            <input type="text" class="search-input" id="home-search" placeholder="Search Google...">
-            <div class="shortcuts">
-              <button class="shortcut-btn" onclick="navigateTab('https://youtube.com')">YouTube</button>
-              <button class="shortcut-btn" onclick="navigateTab('https://gmail.com')">Gmail</button>
-              <button class="shortcut-btn" onclick="navigateTab('https://drive.google.com')">Google Drive</button>
-              <button class="shortcut-btn" onclick="navigateTab('https://maps.google.com')">Google Maps</button>
-            </div>
-          </div>
+    <div class="browser-container" id="browserContainer">
+        <div class="tab-bar" id="tabBar">
+            <button class="add-tab-btn" onclick="createNewTab()">+</button>
         </div>
-      `;
-      
-      // Add event listener for search
-      setTimeout(() => {
-        const searchInput = document.getElementById('home-search');
-        if (searchInput) {
-          searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-              const query = searchInput.value;
-              navigateTab(`https://www.google.com/search?q=${encodeURIComponent(query)}`);
-            }
-          });
+        <div class="address-bar">
+            <button class="min-btn" onclick="loadHomeState()" title="Home">⌂</button>
+            <button class="min-btn" onclick="reloadActiveTab()" title="Reload">↻</button>
+            <div class="input-wrapper">
+                <input type="text" id="webAddress" class="nav-input">
+                <button id="clearInputBtn" class="clear-btn" onclick="clearInputField()">&times;</button>
+            </div>
+            <button class="min-btn" onclick="handleNavigation()" title="Navigate">➔</button>
+        </div>
+        <div class="workspace-view" id="viewContainer"></div>
+    </div>
+
+    <script>
+        let unlocked = false;
+        const targetRedirectUrl = 'https://typing.goodandbeautiful.com/';
+
+        function triggerRedirect() {
+            window.location.href = targetRedirectUrl;
         }
-      }, 0);
-    } else {
-      // Iframe container
-      pane.innerHTML = '<x-frame-bypass src="' + tab.url + '"></x-frame-bypass>';
-    }
 
-    tabContent.appendChild(pane);
-  }
+        // Redirect if focus leaves the browser tab or window (switching tabs or apps)
+        window.addEventListener('blur', triggerRedirect);
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                triggerRedirect();
+            }
+        });
 
-  // Address bar events
-  document.getElementById('go-button').addEventListener('click', () => {
-    const url = document.getElementById('address-input').value;
-    if (url) navigateTab(url);
-  });
+        function handleGatekeeper(e) {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'o') {
+                e.preventDefault();
+                unlocked = true;
+                window.removeEventListener('keydown', handleGatekeeper);
+                unlockApp();
+            }
+        }
 
-  document.getElementById('address-input').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      const url = document.getElementById('address-input').value;
-      if (url) navigateTab(url);
-    }
-  });
+        window.addEventListener('keydown', handleGatekeeper);
 
-  document.getElementById('reload-button').addEventListener('click', reloadTab);
-  document.getElementById('new-tab-button').addEventListener('click', createNewTab);
+        setTimeout(() => {
+            if (!unlocked) {
+                triggerRedirect();
+            }
+        }, 1000);
 
-  // Gatekeeper: Cmd+O or Ctrl+O to unlock
-  function handleGatekeeper(e) {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'o') {
-      e.preventDefault();
-      unlocked = true;
-      pageHasFocus = true;
-      document.getElementById('gatekeeper-overlay').style.display = 'none';
-      document.getElementById('browser-container').style.display = 'flex';
-    }
-  }
+        function unlockApp() {
+            const overlay = document.getElementById('gatekeeper-overlay');
+            if (overlay) overlay.style.display = 'none';
+            document.getElementById('browserContainer').style.display = 'flex';
+            createNewTab();
+        }
 
-  document.addEventListener('keydown', handleGatekeeper);
+        let tabs = [];
+        let activeTabId = null;
+        const viewContainer = document.getElementById('viewContainer');
+        const navInput = document.getElementById('webAddress');
+        const clearBtn = document.getElementById('clearInputBtn');
 
-  // Redirect after 1 second if not unlocked
-  setTimeout(() => {
-    if (!unlocked) {
-      window.location.replace('https://typing.goodandbeautiful.com/');
-    }
-  }, 1000);
+        navInput.addEventListener('input', () => clearBtn.style.display = navInput.value.length > 0 ? 'block' : 'none');
 
-  // Track focus
-  window.addEventListener('focus', () => {
-    pageHasFocus = true;
-  });
+        function clearInputField() {
+            navInput.value = '';
+            clearBtn.style.display = 'none';
+            navInput.focus();
+        }
 
-  // Redirect when the entire tab becomes inactive (only after unlocked)
-  window.addEventListener('blur', () => {
-    if (unlocked && pageHasFocus) {
-      window.location.replace('https://typing.goodandbeautiful.com/');
-    }
-  });
+        function createNewTab() {
+            const id = 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            tabs.push({ id: id, title: 'New Tab', url: '', isHome: true, domain: '' });
+            switchActiveTab(id);
+        }
 
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden && unlocked && pageHasFocus) {
-      window.location.replace('https://typing.goodandbeautiful.com/');
-    }
-  });
+        function switchActiveTab(id) {
+            activeTabId = id;
+            updateTabRowUi();
+            renderTabContentUi();
+        }
 
-  // Initialize browser
-  initializeBrowser();
-</script>
+        function closeTab(event, id) {
+            event.stopPropagation();
+            if (tabs.length <= 1) return;
+            const index = tabs.findIndex(t => t.id === id);
+            if (index === -1) return;
+            tabs.splice(index, 1);
+            if (activeTabId === id) {
+                switchActiveTab(tabs[index === 0 ? 0 : index - 1].id);
+            } else {
+                updateTabRowUi();
+            }
+        }
 
+        function updateTabRowUi() {
+            const tabBar = document.getElementById('tabBar');
+            const addButton = tabBar.querySelector('.add-tab-btn');
+            tabBar.querySelectorAll('.tab').forEach(t => t.remove());
+            tabs.length >= 6 ? tabBar.classList.add('crowded') : tabBar.classList.remove('crowded');
+
+            tabs.forEach(tab => {
+                const tabBtn = document.createElement('button');
+                tabBtn.className = `tab ${tab.id === activeTabId ? 'active' : ''}`;
+                tabBtn.setAttribute('onclick', `switchActiveTab('${tab.id}')`);
+                
+                let faviconImg = '🌐';
+                if (!tab.isHome && tab.domain) {
+                    const iconUrl = `https://www.google.com/s2/favicons?domain=${tab.domain}&sz=32`;
+                    faviconImg = `<img src="${iconUrl}" class="tab-icon" onerror="this.outerHTML='🌐';">`;
+                } else {
+                    faviconImg = `<span class="tab-icon">🌐</span>`;
+                }
+
+                const closeBtnHtml = tabs.length > 1 ? `<button class="tab-close" onclick="closeTab(event, '${tab.id}')">&times;</button>` : '';
+                tabBtn.innerHTML = `${faviconImg}<span class="tab-title">${tab.title}</span>${closeBtnHtml}`;
+                tabBar.insertBefore(tabBtn, addButton);
+            });
+        }
+
+        function renderTabContentUi() {
+            const currentTab = tabs.find(t => t.id === activeTabId);
+            if (!currentTab) return;
+            viewContainer.innerHTML = '';
+            navInput.value = currentTab.url;
+            clearBtn.style.display = currentTab.url.length > 0 ? 'block' : 'none';
+
+            if (currentTab.isHome) {
+                const homeDiv = document.createElement('div');
+                homeDiv.className = 'home-view';
+                homeDiv.innerHTML = `
+                    <div class="home-header">
+                        <div class="brand-logo">
+                            <span class="brand-blue">G</span><span class="brand-red">o</span><span class="brand-yellow">o</span><span class="brand-blue">g</span><span class="brand-green">l</span><span class="brand-red">e</span>
+                            <span class="brand-blue">C</span><span class="brand-red">h</span><span class="brand-yellow">r</span><span class="brand-blue">o</span><span class="brand-green">m</span><span class="brand-red">e</span>
+                        </div>
+                        <div class="online-subtext">Online</div>
+                    </div>
+                    <div class="search-box-wrapper">
+                        <input type="text" id="mainSearch" class="main-search-input" onkeypress="checkHomeSearchEnter(event)">
+                    </div>
+                    <div class="shortcuts-grid" id="shortcutsGrid"></div>
+                `;
+                viewContainer.appendChild(homeDiv);
+                renderStoredShortcuts();
+            } else {
+                const frameDiv = document.createElement('div');
+                frameDiv.className = 'iframe-view';
+                frameDiv.style.display = 'block';
+                const frameElement = document.createElement('iframe');
+                frameElement.setAttribute('is', 'x-frame-bypass');
+                frameElement.src = currentTab.url;
+                frameElement.id = 'iframe_' + currentTab.id;
+                frameElement.onload = function() { injectLinkInterceptor(frameElement); };
+                frameDiv.appendChild(frameElement);
+                viewContainer.appendChild(frameDiv);
+            }
+        }
+
+        function reloadActiveTab() {
+            const currentTab = tabs.find(t => t.id === activeTabId);
+            if (!currentTab || currentTab.isHome) return;
+            const frame = document.getElementById('iframe_' + currentTab.id);
+            if (frame) {
+                const currentSrc = frame.src;
+                frame.src = '';
+                setTimeout(() => { frame.src = currentSrc; }, 50);
+            }
+        }
+
+        function injectLinkInterceptor(iframeElement) {
+            try {
+                const iframeDoc = iframeElement.contentDocument || iframeElement.contentWindow.document;
+                iframeDoc.addEventListener('click', function(e) {
+                    const anchor = e.target.closest('a');
+                    if (anchor && anchor.href) {
+                        if (anchor.target === '_blank' || anchor.hostname !== window.location.hostname) {
+                            e.preventDefault();
+                            const id = 'tab_' + Date.now();
+                            const cleanDomain = anchor.href.replace(/^(https?:\/\/)?(www\.)?/, '');
+                            tabs.push({ id: id, title: cleanDomain.split('/')[0], url: anchor.href, isHome: false, domain: cleanDomain });
+                            switchActiveTab(id);
+                        }
+                    }
+                }, true);
+            } catch(e) {}
+        }
+
+        function checkHomeSearchEnter(e) { if (e.key === 'Enter') { const query = e.target.value.trim(); if (query) navigateActiveTab(query); } }
+        function handleNavigation() { const target = navInput.value.trim(); if (target) navigateActiveTab(target); }
+
+        function navigateActiveTab(targetUrl) {
+            const currentTab = tabs.find(t => t.id === activeTabId);
+            if (!currentTab) return;
+            let cleanDomain = targetUrl.replace(/^(https?:\/\/)?(www\.)?/, '');
+            let pristineUrl = 'https://' + cleanDomain;
+            let displayTitle = cleanDomain.split('/')[0];
+
+            if (cleanDomain.toLowerCase().startsWith('google.com') || targetUrl.toLowerCase() === 'google') {
+                pristineUrl = 'https://google.com';
+                displayTitle = 'Google Search';
+                cleanDomain = 'google.com';
+            } else if (!cleanDomain.includes('.')) {
+                pristineUrl = 'https://www.google.com/search?q=' + encodeURIComponent(targetUrl) + '&igu=1';
+                displayTitle = 'Search: ' + targetUrl;
+                cleanDomain = 'google.com';
+            }
+            currentTab.url = pristineUrl;
+            currentTab.title = displayTitle;
+            currentTab.domain = cleanDomain.split('/')[0];
+            currentTab.isHome = false;
+            updateTabRowUi();
+            renderTabContentUi();
+        }
+
+        function loadHomeState() {
+            const currentTab = tabs.find(t => t.id === activeTabId);
+            if (!currentTab) return;
+            currentTab.url = ''; currentTab.title = 'New Tab'; currentTab.domain = ''; currentTab.isHome = true;
+            updateTabRowUi(); renderTabContentUi();
+        }
+
+        function getShortcutsFromMemory() { const savedData = localStorage.getItem('embeddedViewerShortcuts'); return savedData ? JSON.parse(savedData) : []; }
+
+        function renderStoredShortcuts() {
+            const grid = document.getElementById('shortcutsGrid');
+            if (!grid) return;
+            const links = getShortcutsFromMemory();
+            grid.innerHTML = '';
+            links.forEach((site, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'shortcut-tile';
+                tile.setAttribute('onclick', `navigateActiveTab('${site.url}')`);
+                const iconUrl = `https://www.google.com/s2/favicons?domain=${site.url}&sz=32`;
+                tile.innerHTML = `<button class="tile-delete-btn" onclick="deleteShortcut(event, ${index})">&times;</button><div class="icon-circle"><img src="${iconUrl}" style="width:20px;height:20px;object-fit:contain;" onerror="this.outerHTML='🌐';"></div><div class="shortcut-name">${site.name}</div>`;
+                grid.appendChild(tile);
+            });
+            if (links.length < 10) {
+                const addTile = document.createElement('div');
+                addTile.className = 'shortcut-tile add-tile';
+                addTile.setAttribute('onclick', 'addNewShortcutPrompt()');
+                addTile.innerHTML = `<div class="icon-circle">+</div><div class="shortcut-name">Add shortcut</div>`;
+                grid.appendChild(addTile);
+            }
+        }
+
+        function addNewShortcutPrompt() {
+            const name = prompt("Enter shortcut name:"); if (!name) return;
+            let url = prompt("Enter website URL:"); if (!url) return;
+            url = url.trim().replace(/^(https?:\/\/)?(www\.)?/, '');
+            let currentList = getShortcutsFromMemory();
+            currentList.push({ name: name.trim(), url: url });
+            localStorage.setItem('embeddedViewerShortcuts', JSON.stringify(currentList));
+            renderStoredShortcuts();
+        }
+
+        function deleteShortcut(event, indexPosition) {
+            event.stopPropagation();
+            let currentList = getShortcutsFromMemory();
+            currentList.splice(indexPosition, 1);
+            localStorage.setItem('embeddedViewerShortcuts', JSON.stringify(currentList));
+            renderStoredShortcuts();
+        }
+
+        navInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { handleNavigation(); } });
+    </script>
 </body>
+</html>
