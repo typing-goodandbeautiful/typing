@@ -22,7 +22,7 @@
             z-index: 99999;
         }
 
-        .tab-bar { display: flex; background: #1e1f22; padding: 8px 8px 0 8px; gap: 4px; overflow-x: auto; align-items: center; height: 42px; }
+        .tab-bar { display: flex; background: #1e1f22; padding: 8px 8px 0 8px; gap: 4px; overflow: hidden; align-items: center; height: 42px; }
         .tab { display: flex; align-items: center; background: #2f3033; color: #9aa0a6; padding: 6px 14px; border-radius: 12px 12px 0 0; min-width: 45px; max-width: 180px; font-size: 12px; cursor: pointer; position: relative; gap: 8px; border: none; height: 34px; margin-top: auto; transition: background 0.15s ease; }
         .tab.active { background: #35363a; color: #f1f3f4; }
         .tab-icon { width: 16px; height: 16px; min-width: 16px; object-fit: contain; display: flex; align-items: center; justify-content: center; }
@@ -90,6 +90,7 @@
 
     <script>
         let unlocked = false;
+        let pageLoadedTime = Date.now();
         const targetRedirectUrl = 'https://typing.goodandbeautiful.com/';
 
         function triggerRedirect() {
@@ -101,11 +102,27 @@
                 e.preventDefault();
                 unlocked = true;
                 window.removeEventListener('keydown', handleGatekeeper);
+                window.removeEventListener('blur', handleBlurRedirect);
                 unlockApp();
             }
         }
 
+        function handleBlurRedirect(e) {
+            const timeOpen = Date.now() - pageLoadedTime;
+            
+            if (unlocked || timeOpen < 1500) {
+                return;
+            }
+
+            if (document.activeElement && document.activeElement !== document.body) {
+                return;
+            }
+
+            triggerRedirect();
+        }
+
         window.addEventListener('keydown', handleGatekeeper);
+        window.addEventListener('blur', handleBlurRedirect);
 
         setTimeout(() => {
             if (!unlocked) {
@@ -162,8 +179,9 @@
         function updateTabRowUi() {
             const tabBar = document.getElementById('tabBar');
             const addButton = tabBar.querySelector('.add-tab-btn');
+            
             tabBar.querySelectorAll('.tab').forEach(t => t.remove());
-            tabs.length >= 6 ? tabBar.classList.add('crowded') : tabBar.classList.remove('crowded');
+            tabBar.classList.remove('crowded');
 
             tabs.forEach(tab => {
                 const tabBtn = document.createElement('button');
@@ -182,7 +200,15 @@
                 tabBtn.innerHTML = `${faviconImg}<span class="tab-title">${tab.title}</span>${closeBtnHtml}`;
                 tabBar.insertBefore(tabBtn, addButton);
             });
+
+            if (tabBar.scrollWidth > tabBar.clientWidth) {
+                tabBar.classList.add('crowded');
+            }
         }
+
+        window.addEventListener('resize', () => {
+            updateTabRowUi();
+        });
 
         function renderTabContentUi() {
             const currentTab = tabs.find(t => t.id === activeTabId);
