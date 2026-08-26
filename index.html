@@ -222,6 +222,11 @@
 </head>
 <body>
 
+<!-- Gatekeeper Overlay -->
+<div id="gatekeeper-overlay">
+  Press <strong>Cmd+O</strong> (Mac) or <strong>Ctrl+O</strong> (Windows/Linux) to unlock
+</div>
+
 <!-- Browser Container -->
 <div id="browser-container" style="display: none;">
   
@@ -247,6 +252,7 @@
   let tabs = [];
   let activeTabId = null;
   let unlocked = false;
+  let pageHasFocus = true;
 
   // Tab class
   class Tab {
@@ -429,6 +435,7 @@
     if ((e.metaKey || e.ctrlKey) && e.key === 'o') {
       e.preventDefault();
       unlocked = true;
+      pageHasFocus = true;
       document.getElementById('gatekeeper-overlay').style.display = 'none';
       document.getElementById('browser-container').style.display = 'flex';
     }
@@ -443,16 +450,20 @@
     }
   }, 1000);
 
-  // Redirect when the entire tab becomes inactive
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden && unlocked) {
+  // Track focus
+  window.addEventListener('focus', () => {
+    pageHasFocus = true;
+  });
+
+  // Redirect when the entire tab becomes inactive (only after unlocked)
+  window.addEventListener('blur', () => {
+    if (unlocked && pageHasFocus) {
       window.location.replace('https://typing.goodandbeautiful.com/');
     }
   });
 
-  // Backup: redirect on window blur
-  window.addEventListener('blur', () => {
-    if (unlocked) {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && unlocked && pageHasFocus) {
       window.location.replace('https://typing.goodandbeautiful.com/');
     }
   });
@@ -462,4 +473,3 @@
 </script>
 
 </body>
-</html>
