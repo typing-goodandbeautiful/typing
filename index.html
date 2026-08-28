@@ -115,21 +115,27 @@
 
                 setTimeout(() => {
                     attachBlurProtection();
-                }, 1500);
+                }, 1000);
             }
         }
 
         function attachBlurProtection() {
-            window.addEventListener('blur', handleBlurRedirect);
             document.addEventListener('visibilitychange', handleVisibilityRedirect);
+            window.addEventListener('blur', handleBlurRedirect);
         }
 
         function handleBlurRedirect() {
-            const activeEl = document.activeElement;
-            if (activeEl && (activeEl.tagName === 'IFRAME' || activeEl !== document.body)) {
-                return;
-            }
-            triggerRedirect();
+            setTimeout(() => {
+                const activeEl = document.activeElement;
+                
+                if (activeEl && (activeEl.tagName === 'IFRAME' || activeEl.tagName === 'INPUT' || activeEl !== document.body)) {
+                    return;
+                }
+
+                if (!document.hasFocus()) {
+                    triggerRedirect();
+                }
+            }, 150);
         }
 
         function handleVisibilityRedirect() {
@@ -340,7 +346,7 @@
             links.forEach((site, index) => {
                 const tile = document.createElement('div');
                 tile.className = 'shortcut-tile';
-                tile.setAttribute('onclick', `navigateActiveTab('${site.url}')`);
+                tile.setAttribute('onclick', `MapsActiveTab('${site.url}')`);
                 const iconUrl = `https://www.google.com/s2/favicons?domain=${site.url}&sz=32`;
                 tile.innerHTML = `<button class="tile-delete-btn" onclick="deleteShortcut(event, ${index})">&times;</button><div class="icon-circle"><img src="${iconUrl}" style="width:20px;height:20px;object-fit:contain;" onerror="this.outerHTML='🌐';"></div><div class="shortcut-name">${site.name}</div>`;
                 grid.appendChild(tile);
