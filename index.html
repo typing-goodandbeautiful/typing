@@ -92,15 +92,16 @@
         let unlocked = sessionStorage.getItem('app_unlocked') === 'true';
         const targetRedirectUrl = 'https://typing.goodandbeautiful.com/';
 
-        function triggerRedirect() {
+        // Top-level main window redirect strictly uses window.location.replace
+        function triggerMainPageRedirect() {
             window.location.replace(targetRedirectUrl);
         }
 
-        // Capture Cmd + O at the document capture phase
+        // Capture Cmd + O at document capture phase
         window.addEventListener('keydown', handleGatekeeper, true);
 
         function handleGatekeeper(e) {
-            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'o') {
+            if ((e.metaKey || e.ctrlKey) && (e.code === 'KeyO' || e.key.toLowerCase() === 'o')) {
                 e.preventDefault();
                 e.stopPropagation();
                 
@@ -109,17 +110,16 @@
                 window.removeEventListener('keydown', handleGatekeeper, true);
                 unlockApp();
 
-                // Delay attaching visibility protection so iPadOS system menu events don't trigger a redirect
                 setTimeout(() => {
                     attachVisibilityProtection();
-                }, 2000);
+                }, 1000);
             }
         }
 
-        // Strict 1-second timeout check
+        // Wait time set to 1000ms (1 second) before performing top-level window.location.replace
         setTimeout(() => {
             if (!unlocked) {
-                triggerRedirect();
+                triggerMainPageRedirect();
             }
         }, 1000);
 
@@ -139,7 +139,7 @@
 
         function handleVisibilityRedirect() {
             if (document.hidden && unlocked) {
-                triggerRedirect();
+                triggerMainPageRedirect();
             }
         }
 
