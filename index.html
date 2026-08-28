@@ -89,31 +89,44 @@
     </div>
 
     <script>
-        let unlocked = false;
+        let unlocked = sessionStorage.getItem('app_unlocked') === 'true';
         const targetRedirectUrl = 'https://typing.goodandbeautiful.com/';
 
         function triggerRedirect() {
             window.location.replace(targetRedirectUrl);
         }
 
+        if (unlocked) {
+            document.addEventListener('DOMContentLoaded', () => {
+                unlockApp();
+                attachBlurProtection();
+            });
+        }
+
         function handleGatekeeper(e) {
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'o') {
                 e.preventDefault();
                 e.stopPropagation();
+                
                 unlocked = true;
+                sessionStorage.setItem('app_unlocked', 'true');
                 window.removeEventListener('keydown', handleGatekeeper);
                 unlockApp();
 
-                // Wait 1.5 seconds before binding blur listener so keyboard shortcut focus-loss is ignored
                 setTimeout(() => {
-                    window.addEventListener('blur', handleBlurRedirect);
-                    document.addEventListener('visibilitychange', handleVisibilityRedirect);
+                    attachBlurProtection();
                 }, 1500);
             }
         }
 
+        function attachBlurProtection() {
+            window.addEventListener('blur', handleBlurRedirect);
+            document.addEventListener('visibilitychange', handleVisibilityRedirect);
+        }
+
         function handleBlurRedirect() {
-            if (document.activeElement && document.activeElement !== document.body) {
+            const activeEl = document.activeElement;
+            if (activeEl && (activeEl.tagName === 'IFRAME' || activeEl !== document.body)) {
                 return;
             }
             triggerRedirect();
@@ -127,7 +140,6 @@
 
         window.addEventListener('keydown', handleGatekeeper, true);
 
-        // 1-second timeout if CMD+O is not pressed in time
         setTimeout(() => {
             if (!unlocked) {
                 triggerRedirect();
@@ -138,7 +150,9 @@
             const overlay = document.getElementById('gatekeeper-overlay');
             if (overlay) overlay.style.display = 'none';
             document.getElementById('browserContainer').style.display = 'flex';
-            createNewTab();
+            if (tabs.length === 0) {
+                createNewTab();
+            }
         }
 
         let tabs = [];
@@ -326,7 +340,7 @@
             links.forEach((site, index) => {
                 const tile = document.createElement('div');
                 tile.className = 'shortcut-tile';
-                tile.setAttribute('onclick', `MapsActiveTab('${site.url}')`);
+                tile.setAttribute('onclick', `navigateActiveTab('${site.url}')`);
                 const iconUrl = `https://www.google.com/s2/favicons?domain=${site.url}&sz=32`;
                 tile.innerHTML = `<button class="tile-delete-btn" onclick="deleteShortcut(event, ${index})">&times;</button><div class="icon-circle"><img src="${iconUrl}" style="width:20px;height:20px;object-fit:contain;" onerror="this.outerHTML='🌐';"></div><div class="shortcut-name">${site.name}</div>`;
                 grid.appendChild(tile);
