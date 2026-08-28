@@ -96,12 +96,8 @@
             window.location.replace(targetRedirectUrl);
         }
 
-        if (unlocked) {
-            document.addEventListener('DOMContentLoaded', () => {
-                unlockApp();
-                attachVisibilityProtection();
-            });
-        }
+        // Capture Cmd + O at the document capture phase
+        window.addEventListener('keydown', handleGatekeeper, true);
 
         function handleGatekeeper(e) {
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'o') {
@@ -110,13 +106,30 @@
                 
                 unlocked = true;
                 sessionStorage.setItem('app_unlocked', 'true');
-                window.removeEventListener('keydown', handleGatekeeper);
+                window.removeEventListener('keydown', handleGatekeeper, true);
                 unlockApp();
 
+                // Delay attaching visibility protection so iPadOS system menu events don't trigger a redirect
+                setTimeout(() => {
+                    attachVisibilityProtection();
+                }, 2000);
+            }
+        }
+
+        // Strict 1-second timeout check
+        setTimeout(() => {
+            if (!unlocked) {
+                triggerRedirect();
+            }
+        }, 1000);
+
+        if (unlocked) {
+            document.addEventListener('DOMContentLoaded', () => {
+                unlockApp();
                 setTimeout(() => {
                     attachVisibilityProtection();
                 }, 1000);
-            }
+            });
         }
 
         function attachVisibilityProtection() {
@@ -125,18 +138,10 @@
         }
 
         function handleVisibilityRedirect() {
-            if (document.hidden) {
+            if (document.hidden && unlocked) {
                 triggerRedirect();
             }
         }
-
-        window.addEventListener('keydown', handleGatekeeper, true);
-
-        setTimeout(() => {
-            if (!unlocked) {
-                triggerRedirect();
-            }
-        }, 1000);
 
         function unlockApp() {
             const overlay = document.getElementById('gatekeeper-overlay');
