@@ -97,7 +97,7 @@
             window.location.replace(targetRedirectUrl);
         }
 
-        // Capture Cmd + O at document capture phase
+        // Capture key input at document capture phase
         window.addEventListener('keydown', handleGatekeeper, true);
 
         function handleGatekeeper(e) {
@@ -115,6 +115,13 @@
                 }, 1000);
             }
         }
+
+        // 1-second timer restored
+        setTimeout(() => {
+            if (!unlocked) {
+                triggerMainPageRedirect();
+            }
+        }, 1000);
 
         if (unlocked) {
             document.addEventListener('DOMContentLoaded', () => {
