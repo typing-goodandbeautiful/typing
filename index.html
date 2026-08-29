@@ -70,7 +70,6 @@
     <script src="https://github.io" type="module"></script>
 </head>
 <body>
-    <!-- Hidden input trap to force iPad OS keyboard focus -->
     <input type="text" id="focusTrap" style="position: absolute; opacity: 0; top: -9999px; left: -9999px;" autofocus />
 
     <div id="gatekeeper-overlay"></div>
@@ -92,24 +91,31 @@
     </div>
 
     <script>
+        // Always start in locked state on every page load/reload
         let unlocked = false;
+        let redirectTimer = null;
         const targetRedirectUrl = 'https://typing.goodandbeautiful.com/';
 
         function triggerMainPageRedirect() {
             window.location.replace(targetRedirectUrl);
         }
 
-        // Force active focus to the hidden input on launch
+        // Focus management to capture keypress on page load
         const focusTrap = document.getElementById('focusTrap');
-        if (focusTrap) {
-            focusTrap.focus();
-        }
+        if (focusTrap) focusTrap.focus();
+        window.focus();
 
-        // Keep focusing on touch/click anywhere on screen
-        document.addEventListener('touchstart', () => focusTrap && focusTrap.focus(), { passive: true });
-        document.addEventListener('click', () => focusTrap && focusTrap.focus(), { passive: true });
+        document.addEventListener('touchstart', () => {
+            if (focusTrap) focusTrap.focus();
+            window.focus();
+        }, { passive: true });
 
-        // Listen on both document and window in capture phase
+        document.addEventListener('click', () => {
+            if (focusTrap) focusTrap.focus();
+            window.focus();
+        }, { passive: true });
+
+        // Event listeners for key interception
         document.addEventListener('keydown', handleGatekeeper, true);
         window.addEventListener('keydown', handleGatekeeper, true);
 
@@ -121,19 +127,20 @@
                 e.preventDefault();
                 e.stopPropagation();
                 
+                // Unlock app and clear the 1-second redirect timer
                 unlocked = true;
+                if (redirectTimer) clearTimeout(redirectTimer);
+                
                 window.removeEventListener('keydown', handleGatekeeper, true);
                 document.removeEventListener('keydown', handleGatekeeper, true);
+                
                 unlockApp();
-
-                setTimeout(() => {
-                    attachVisibilityProtection();
-                }, 1000);
+                attachVisibilityProtection();
             }
         }
 
-        // 1-second gatekeeper timer on every load
-        setTimeout(() => {
+        // Exactly 1 second (1000ms) timer. Redirects if Cmd + O is not hit in time.
+        redirectTimer = setTimeout(() => {
             if (!unlocked) {
                 triggerMainPageRedirect();
             }
