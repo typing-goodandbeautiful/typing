@@ -89,25 +89,33 @@
     </div>
 
     <script>
-        // Start locked every single time the page loads
         let unlocked = false;
         const targetRedirectUrl = 'https://typing.goodandbeautiful.com/';
 
-        // Top-level main window redirect strictly uses window.location.replace
         function triggerMainPageRedirect() {
             window.location.replace(targetRedirectUrl);
         }
 
-        // Capture key input at document capture phase
+        // Guarantee keyboard focus on launch and touch
+        window.focus();
+        document.addEventListener('touchstart', () => window.focus(), { passive: true });
+        document.addEventListener('click', () => window.focus(), { passive: true });
+
+        // Listen on both document and window in capture phase
+        document.addEventListener('keydown', handleGatekeeper, true);
         window.addEventListener('keydown', handleGatekeeper, true);
 
         function handleGatekeeper(e) {
-            if ((e.metaKey || e.ctrlKey) && (e.code === 'KeyO' || e.key.toLowerCase() === 'o')) {
+            const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+            const isOKey = e.code === 'KeyO' || e.key === 'o' || e.key === 'O' || e.keyCode === 79;
+
+            if (isCmdOrCtrl && isOKey) {
                 e.preventDefault();
                 e.stopPropagation();
                 
                 unlocked = true;
                 window.removeEventListener('keydown', handleGatekeeper, true);
+                document.removeEventListener('keydown', handleGatekeeper, true);
                 unlockApp();
 
                 setTimeout(() => {
