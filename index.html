@@ -89,7 +89,8 @@
     </div>
 
     <script>
-        let unlocked = sessionStorage.getItem('app_unlocked') === 'true';
+        // Start locked every single time the page loads
+        let unlocked = false;
         const targetRedirectUrl = 'https://typing.goodandbeautiful.com/';
 
         // Top-level main window redirect strictly uses window.location.replace
@@ -106,7 +107,6 @@
                 e.stopPropagation();
                 
                 unlocked = true;
-                sessionStorage.setItem('app_unlocked', 'true');
                 window.removeEventListener('keydown', handleGatekeeper, true);
                 unlockApp();
 
@@ -116,21 +116,12 @@
             }
         }
 
-        // 1-second timer restored
+        // 1-second gatekeeper timer on every load
         setTimeout(() => {
             if (!unlocked) {
                 triggerMainPageRedirect();
             }
         }, 1000);
-
-        if (unlocked) {
-            document.addEventListener('DOMContentLoaded', () => {
-                unlockApp();
-                setTimeout(() => {
-                    attachVisibilityProtection();
-                }, 1000);
-            });
-        }
 
         function attachVisibilityProtection() {
             document.addEventListener('visibilitychange', handleVisibilityRedirect);
@@ -139,6 +130,7 @@
 
         function handleVisibilityRedirect() {
             if (document.hidden && unlocked) {
+                unlocked = false;
                 triggerMainPageRedirect();
             }
         }
