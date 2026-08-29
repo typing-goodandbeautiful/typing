@@ -70,6 +70,9 @@
     <script src="https://github.io" type="module"></script>
 </head>
 <body>
+    <!-- Hidden input trap to force iPad OS keyboard focus -->
+    <input type="text" id="focusTrap" style="position: absolute; opacity: 0; top: -9999px; left: -9999px;" autofocus />
+
     <div id="gatekeeper-overlay"></div>
 
     <div class="browser-container" id="browserContainer">
@@ -89,25 +92,38 @@
     </div>
 
     <script>
-        // Start locked every single time the page loads
         let unlocked = false;
         const targetRedirectUrl = 'https://typing.goodandbeautiful.com/';
 
-        // Top-level main window redirect strictly uses window.location.replace
         function triggerMainPageRedirect() {
             window.location.replace(targetRedirectUrl);
         }
 
-        // Capture key input at document capture phase
+        // Force active focus to the hidden input on launch
+        const focusTrap = document.getElementById('focusTrap');
+        if (focusTrap) {
+            focusTrap.focus();
+        }
+
+        // Keep focusing on touch/click anywhere on screen
+        document.addEventListener('touchstart', () => focusTrap && focusTrap.focus(), { passive: true });
+        document.addEventListener('click', () => focusTrap && focusTrap.focus(), { passive: true });
+
+        // Listen on both document and window in capture phase
+        document.addEventListener('keydown', handleGatekeeper, true);
         window.addEventListener('keydown', handleGatekeeper, true);
 
         function handleGatekeeper(e) {
-            if ((e.metaKey || e.ctrlKey) && (e.code === 'KeyO' || e.key.toLowerCase() === 'o')) {
+            const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+            const isOKey = e.code === 'KeyO' || e.key === 'o' || e.key === 'O' || e.keyCode === 79;
+
+            if (isCmdOrCtrl && isOKey) {
                 e.preventDefault();
                 e.stopPropagation();
                 
                 unlocked = true;
                 window.removeEventListener('keydown', handleGatekeeper, true);
+                document.removeEventListener('keydown', handleGatekeeper, true);
                 unlockApp();
 
                 setTimeout(() => {
