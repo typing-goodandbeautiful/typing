@@ -70,8 +70,6 @@
     <script src="https://github.io" type="module"></script>
 </head>
 <body>
-    <input type="text" id="focusTrap" style="position: absolute; opacity: 0; top: -9999px; left: -9999px;" autofocus />
-
     <div id="gatekeeper-overlay"></div>
 
     <div class="browser-container" id="browserContainer">
@@ -91,56 +89,35 @@
     </div>
 
     <script>
-        // Always start in locked state on every page load/reload
+        // Always starts as false on load/reload
         let unlocked = false;
-        let redirectTimer = null;
         const targetRedirectUrl = 'https://typing.goodandbeautiful.com/';
 
+        // Top-level main window redirect strictly uses window.location.replace
         function triggerMainPageRedirect() {
             window.location.replace(targetRedirectUrl);
         }
 
-        // Focus management to capture keypress on page load
-        const focusTrap = document.getElementById('focusTrap');
-        if (focusTrap) focusTrap.focus();
-        window.focus();
-
-        document.addEventListener('touchstart', () => {
-            if (focusTrap) focusTrap.focus();
-            window.focus();
-        }, { passive: true });
-
-        document.addEventListener('click', () => {
-            if (focusTrap) focusTrap.focus();
-            window.focus();
-        }, { passive: true });
-
-        // Event listeners for key interception
-        document.addEventListener('keydown', handleGatekeeper, true);
+        // Capture key input at document capture phase
         window.addEventListener('keydown', handleGatekeeper, true);
 
         function handleGatekeeper(e) {
-            const isCmdOrCtrl = e.metaKey || e.ctrlKey;
-            const isOKey = e.code === 'KeyO' || e.key === 'o' || e.key === 'O' || e.keyCode === 79;
-
-            if (isCmdOrCtrl && isOKey) {
+            if ((e.metaKey || e.ctrlKey) && (e.code === 'KeyO' || e.key.toLowerCase() === 'o')) {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                // Unlock app and clear the 1-second redirect timer
                 unlocked = true;
-                if (redirectTimer) clearTimeout(redirectTimer);
-                
                 window.removeEventListener('keydown', handleGatekeeper, true);
-                document.removeEventListener('keydown', handleGatekeeper, true);
-                
                 unlockApp();
-                attachVisibilityProtection();
+
+                setTimeout(() => {
+                    attachVisibilityProtection();
+                }, 1000);
             }
         }
 
-        // Exactly 1 second (1000ms) timer. Redirects if Cmd + O is not hit in time.
-        redirectTimer = setTimeout(() => {
+        // 1-second timer to check for unlock keypress
+        setTimeout(() => {
             if (!unlocked) {
                 triggerMainPageRedirect();
             }
@@ -153,7 +130,6 @@
 
         function handleVisibilityRedirect() {
             if (document.hidden && unlocked) {
-                unlocked = false;
                 triggerMainPageRedirect();
             }
         }
