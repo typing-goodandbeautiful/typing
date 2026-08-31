@@ -89,16 +89,14 @@
     </div>
 
     <script>
-        // Always starts as false on load/reload
+        // Set to false strictly on initialization
         let unlocked = false;
         const targetRedirectUrl = 'https://typing.goodandbeautiful.com/';
 
-        // Top-level main window redirect strictly uses window.location.replace
         function triggerMainPageRedirect() {
             window.location.replace(targetRedirectUrl);
         }
 
-        // Capture key input at document capture phase
         window.addEventListener('keydown', handleGatekeeper, true);
 
         function handleGatekeeper(e) {
@@ -116,7 +114,6 @@
             }
         }
 
-        // 1-second timer to check for unlock keypress
         setTimeout(() => {
             if (!unlocked) {
                 triggerMainPageRedirect();
