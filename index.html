@@ -89,7 +89,7 @@
     </div>
 
     <script>
-        // Set to false strictly on initialization
+        // Set to false strictly on initialization (no session storage for locking)
         let unlocked = false;
         const targetRedirectUrl = 'https://typing.goodandbeautiful.com/';
 
@@ -315,6 +315,7 @@
             updateTabRowUi(); renderTabContentUi();
         }
 
+        // Local Storage maintained exclusively for browser shortcuts
         function getShortcutsFromMemory() { const savedData = localStorage.getItem('embeddedViewerShortcuts'); return savedData ? JSON.parse(savedData) : []; }
 
         function renderStoredShortcuts() {
