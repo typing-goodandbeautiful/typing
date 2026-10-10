@@ -8,9 +8,9 @@
     <link rel="apple-touch-icon" href="https://typing.goodandbeautiful.com/icons/Icon-192.png">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #202124; color: #f1f3f4; overflow: hidden; }
+        body, html { height: 100%; width: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #202124; color: #f1f3f4; overflow: hidden; position: fixed; }
         
-        .browser-container { display: none; flex-direction: column; height: 100vh; width: 100vw; }
+        .browser-container { display: none; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; }
         
         #gatekeeper-overlay {
             position: fixed;
@@ -18,7 +18,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: #000000;
+            background-color: #ffffff;
             z-index: 99999;
         }
 
@@ -39,8 +39,8 @@
         .clear-btn { position: absolute; right: 12px; background: none; border: none; color: #9aa0a6; font-size: 18px; cursor: pointer; display: none; }
         .min-btn { background: none; border: none; color: #e8eaed; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; transition: background 0.15s; }
         .min-btn:hover { background: rgba(255,255,255,0.1); }
-        .workspace-view { flex: 1; position: relative; background: #202124; }
-        .home-view { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; padding: 20px; }
+        .workspace-view { flex: 1; position: relative; background: #202124; overflow: hidden; }
+        .home-view { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; padding: 20px; overflow-y: auto; }
         
         .home-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; }
         .brand-logo { font-size: 52px; font-weight: 500; letter-spacing: -1px; margin-bottom: 4px; user-select: none; }
@@ -63,7 +63,7 @@
         .shortcut-tile:hover .tile-delete-btn { display: flex; }
         .tile-delete-btn:hover { color: #ff6b6b; }
         .add-tile .icon-circle { border: 1px dashed #5f6368; background: transparent; }
-        .iframe-view { display: none; width: 100%; height: 100%; background: #ffffff; position: absolute; top: 0; left: 0; }
+        .iframe-view { display: none; width: 100%; height: 100%; background: #ffffff; position: absolute; top: 0; left: 0; overflow: hidden; }
         iframe[is="x-frame-bypass"] { width: 100%; height: 100%; border: none; background: #ffffff; }
     </style>
     <script src="https://unpkg.com"></script>
@@ -78,6 +78,7 @@
         </div>
         <div class="address-bar">
             <button class="min-btn" onclick="loadHomeState()" title="Home">⌂</button>
+            <button class="min-btn" onclick="showHtmlSource()" title="View HTML Source">⟨/⟩</button>
             <button class="min-btn" onclick="reloadActiveTab()" title="Reload">↻</button>
             <div class="input-wrapper">
                 <input type="text" id="webAddress" class="nav-input">
@@ -89,7 +90,6 @@
     </div>
 
     <script>
-        // Set to false strictly on initialization (no session storage for locking)
         let unlocked = false;
         const targetRedirectUrl = 'https://typing.goodandbeautiful.com/';
 
@@ -246,10 +246,81 @@
                 frameElement.setAttribute('is', 'x-frame-bypass');
                 frameElement.src = currentTab.url;
                 frameElement.id = 'iframe_' + currentTab.id;
-                frameElement.onload = function() { injectLinkInterceptor(frameElement); };
+                
+                frameElement.onload = function() { 
+                    handleIframePageLoad(currentTab.id, frameElement);
+                };
+                
                 frameDiv.appendChild(frameElement);
                 viewContainer.appendChild(frameDiv);
             }
+        }
+
+        function handleIframePageLoad(tabId, iframeElement) {
+            const targetTab = tabs.find(t => t.id === tabId);
+            if (!targetTab) return;
+
+            try {
+                const iframeDoc = iframeElement.contentDocument || iframeElement.contentWindow.document;
+                const iframeWin = iframeElement.contentWindow;
+
+                if (iframeWin.location.href && iframeWin.location.href !== 'about:blank') {
+                    updateTabUrlAndTitle(targetTab, iframeWin.location.href, iframeDoc.title);
+                }
+
+                iframeDoc.addEventListener('click', function(e) {
+                    const anchor = e.target.closest('a');
+                    if (anchor && anchor.href) {
+                        if (anchor.target === '_blank') {
+                            e.preventDefault();
+                            const id = 'tab_' + Date.now();
+                            const cleanDomain = anchor.href.replace(/^(https?:\/\/)?(www\.)?/, '');
+                            tabs.push({ id: id, title: cleanDomain.split('/')[0], url: anchor.href, isHome: false, domain: cleanDomain });
+                            switchActiveTab(id);
+                        } else {
+                            setTimeout(() => {
+                                updateTabUrlAndTitle(targetTab, anchor.href);
+                            }, 50);
+                        }
+                    }
+                }, true);
+            } catch(e) {}
+        }
+
+        function updateTabUrlAndTitle(tab, newUrl, titleHint) {
+            tab.url = newUrl;
+            let cleanDomain = newUrl.replace(/^(https?:\/\/)?(www\.)?/, '');
+            tab.domain = cleanDomain.split('/')[0];
+            tab.title = titleHint || tab.domain;
+
+            if (tab.id === activeTabId) {
+                navInput.value = tab.url;
+                clearBtn.style.display = tab.url.length > 0 ? 'block' : 'none';
+                updateTabRowUi();
+            }
+        }
+
+        function showHtmlSource() {
+            const currentTab = tabs.find(t => t.id === activeTabId);
+            if (!currentTab) return;
+
+            let htmlContent = '';
+            if (currentTab.isHome) {
+                htmlContent = document.documentElement.outerHTML;
+            } else {
+                try {
+                    const frame = document.getElementById('iframe_' + currentTab.id);
+                    const iframeDoc = frame.contentDocument || frame.contentWindow.document;
+                    htmlContent = iframeDoc.documentElement.outerHTML;
+                } catch(e) {
+                    htmlContent = "Unable to access iframe source due to cross-origin restrictions.";
+                }
+            }
+
+            const sourceWindow = window.open('', '_blank');
+            sourceWindow.document.write('<!DOCTYPE html><html><head><title>Page HTML Source</title><style>body { background: #202124; color: #f1f3f4; font-family: monospace; padding: 20px; white-space: pre-wrap; word-break: break-all; }</style></head><body></body></html>');
+            sourceWindow.document.close();
+            sourceWindow.document.body.textContent = htmlContent;
         }
 
         function reloadActiveTab() {
@@ -263,47 +334,36 @@
             }
         }
 
-        function injectLinkInterceptor(iframeElement) {
-            try {
-                const iframeDoc = iframeElement.contentDocument || iframeElement.contentWindow.document;
-                iframeDoc.addEventListener('click', function(e) {
-                    const anchor = e.target.closest('a');
-                    if (anchor && anchor.href) {
-                        if (anchor.target === '_blank' || anchor.hostname !== window.location.hostname) {
-                            e.preventDefault();
-                            const id = 'tab_' + Date.now();
-                            const cleanDomain = anchor.href.replace(/^(https?:\/\/)?(www\.)?/, '');
-                            tabs.push({ id: id, title: cleanDomain.split('/')[0], url: anchor.href, isHome: false, domain: cleanDomain });
-                            switchActiveTab(id);
-                        }
-                    }
-                }, true);
-            } catch(e) {}
-        }
-
         function checkHomeSearchEnter(e) { if (e.key === 'Enter') { const query = e.target.value.trim(); if (query) navigateActiveTab(query); } }
         function handleNavigation() { const target = navInput.value.trim(); if (target) navigateActiveTab(target); }
 
         function navigateActiveTab(targetUrl) {
             const currentTab = tabs.find(t => t.id === activeTabId);
             if (!currentTab) return;
-            let cleanDomain = targetUrl.replace(/^(https?:\/\/)?(www\.)?/, '');
-            let pristineUrl = 'https://' + cleanDomain;
-            let displayTitle = cleanDomain.split('/')[0];
 
-            if (cleanDomain.toLowerCase().startsWith('google.com') || targetUrl.toLowerCase() === 'google') {
-                pristineUrl = 'https://google.com';
-                displayTitle = 'Google Search';
-                cleanDomain = 'google.com';
-            } else if (!cleanDomain.includes('.')) {
+            let pristineUrl = targetUrl;
+            let displayTitle = '';
+            let cleanDomain = '';
+
+            if (targetUrl.startsWith('http://') || targetUrl.startsWith('https://')) {
+                pristineUrl = targetUrl;
+                cleanDomain = targetUrl.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+                displayTitle = cleanDomain;
+            } else if (targetUrl.includes('.') && !targetUrl.includes(' ')) {
+                cleanDomain = targetUrl.split('/')[0];
+                pristineUrl = 'https://' + targetUrl;
+                displayTitle = cleanDomain;
+            } else {
                 pristineUrl = 'https://www.google.com/search?q=' + encodeURIComponent(targetUrl) + '&igu=1';
                 displayTitle = 'Search: ' + targetUrl;
                 cleanDomain = 'google.com';
             }
+
             currentTab.url = pristineUrl;
             currentTab.title = displayTitle;
-            currentTab.domain = cleanDomain.split('/')[0];
+            currentTab.domain = cleanDomain;
             currentTab.isHome = false;
+            
             updateTabRowUi();
             renderTabContentUi();
         }
@@ -315,7 +375,6 @@
             updateTabRowUi(); renderTabContentUi();
         }
 
-        // Local Storage maintained exclusively for browser shortcuts
         function getShortcutsFromMemory() { const savedData = localStorage.getItem('embeddedViewerShortcuts'); return savedData ? JSON.parse(savedData) : []; }
 
         function renderStoredShortcuts() {
