@@ -41,6 +41,7 @@
         .min-btn:hover { background: rgba(255,255,255,0.1); }
         .workspace-view { flex: 1; position: relative; background: #202124; overflow: hidden; }
         .home-view { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; padding: 20px; overflow-y: auto; }
+        .source-view { display: flex; flex-direction: column; width: 100%; height: 100%; background: #202124; color: #f1f3f4; padding: 20px; overflow: auto; font-family: monospace; font-size: 13px; white-space: pre-wrap; word-break: break-all; }
         
         .home-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; }
         .brand-logo { font-size: 52px; font-weight: 500; letter-spacing: -1px; margin-bottom: 4px; user-select: none; }
@@ -300,27 +301,29 @@
             }
         }
 
-        function showHtmlSource() {
+        async function showHtmlSource() {
             const currentTab = tabs.find(t => t.id === activeTabId);
             if (!currentTab) return;
 
-            let htmlContent = '';
+            viewContainer.innerHTML = '';
+            const sourceDiv = document.createElement('div');
+            sourceDiv.className = 'source-view';
+            sourceDiv.textContent = 'Loading source code...';
+            viewContainer.appendChild(sourceDiv);
+
             if (currentTab.isHome) {
-                htmlContent = document.documentElement.outerHTML;
+                sourceDiv.textContent = document.documentElement.outerHTML;
             } else {
                 try {
-                    const frame = document.getElementById('iframe_' + currentTab.id);
-                    const iframeDoc = frame.contentDocument || frame.contentWindow.document;
-                    htmlContent = iframeDoc.documentElement.outerHTML;
-                } catch(e) {
-                    htmlContent = "Unable to access iframe source due to cross-origin restrictions.";
+                    const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(currentTab.url);
+                    const response = await fetch(proxyUrl);
+                    if (!response.ok) throw new Error('Failed to retrieve source.');
+                    const htmlText = await response.text();
+                    sourceDiv.textContent = htmlText;
+                } catch (e) {
+                    sourceDiv.textContent = "Unable to fetch source code due to CORS/network restrictions for this external page.";
                 }
             }
-
-            const sourceWindow = window.open('', '_blank');
-            sourceWindow.document.write('<!DOCTYPE html><html><head><title>Page HTML Source</title><style>body { background: #202124; color: #f1f3f4; font-family: monospace; padding: 20px; white-space: pre-wrap; word-break: break-all; }</style></head><body></body></html>');
-            sourceWindow.document.close();
-            sourceWindow.document.body.textContent = htmlContent;
         }
 
         function reloadActiveTab() {
